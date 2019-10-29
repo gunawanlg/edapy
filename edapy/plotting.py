@@ -13,13 +13,13 @@ def distplot_numerical(data, cols_num, col_target=None):
             a.set_xlabel(col)
     else:
         if (data[col_target].nunique() == 2): # binary target
-            target_mask = data[col_target] == data[col_target].unique()[0]
+            target_mask = data[col_target] == sorted(data[col_target].unique())[0]
             n = math.ceil(len(cols_num) / 3)
             fig, ax = plt.subplots(n, 3, figsize=(15, 3.5*n))
             for col, a in zip(cols_num, ax.reshape(-1)):
                 sns.distplot(data[target_mask][col].dropna(), ax=a)                                    
                 sns.distplot(data[~target_mask][col].dropna(), ax=a)
-                a.legend(data[col_target].unique())
+                a.legend(sorted(data[col_target].unique()))
                 a.set_xlabel(col)
         else: # regression target, plot only distribution of attributes
             n = math.ceil(len(cols_num) / 3)
@@ -56,7 +56,8 @@ def distplot_categorical(data, cols_cat, col_target=None, normalize=True):
 
 def diff_distplot_numerical(data, cols_num, col_target, filt_idx):
     if (data[col_target].nunique() == 2): # binary target
-        target_mask = data[col_target] == data[col_target].unique()[0]
+        sorted_keys = sorted(list(data[col_target].unique()))
+        target_mask = data[col_target] == sorted_keys[0]
         n = math.ceil(len(cols_num) / 3)
         fig, ax = plt.subplots(n, 3, figsize=(15, 3.5*n))
         for col, a in zip(cols_num, ax.reshape(-1)):
@@ -64,7 +65,7 @@ def diff_distplot_numerical(data, cols_num, col_target, filt_idx):
             sns.distplot(data[~target_mask][col].dropna(), ax=a)
             sns.distplot(data[filt_idx & target_mask][col].dropna(), ax=a)
             sns.distplot(data[filt_idx & ~target_mask][col].dropna(), ax=a)
-            a.legend(list(data[col_target].unique()) + ['filt_no', 'filt_yes'])
+            a.legend(sorted_keys + ['filt_'+sorted_keys[0], 'filt_'+sorted_keys[1]])
             a.set_xlabel(col)
 
 def diff_distplot_categorical(data, cols_cat, col_target, filt_idx):
