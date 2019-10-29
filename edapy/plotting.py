@@ -53,7 +53,6 @@ def distplot_categorical(data, cols_cat, col_target=None, normalize=True):
                     sns.distplot(data[data[col] == val][col_target], ax=a)
                 a.legend(data[col].unique())
                 a.set_xlabel(col)
-            plt.tight_layout()
 
 def diff_distplot_numerical(data, cols_num, col_target, filt_idx):
     if (data[col_target].nunique() == 2): # binary target
