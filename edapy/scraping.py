@@ -1,7 +1,7 @@
 # Instagram Scraping Packages
 from igramscraper.instagram import Instagram
 
-# Utilities
+# Utilities, free proxies website https://openproxy.space/list/
 from itertools import cycle
 from .utils import batch
 from tqdm import tqdm_notebook as tqdm
@@ -63,8 +63,11 @@ def get_all_media_comments(list_media_ids, filename, proxies):
                 try:
                     comments = instagram.get_media_comments_by_id(media_id, 10000)
                     for comment in comments['comments']:
+                        comment_text = comment.text.strip('\n')
+                        comment_text = comment_text.replace('\r', '')
+                        comment_text = comment_text.replace('\n', ' ')
                         with open(filename, 'a', encoding="utf-8") as f:
-                            f.write('{},{},{},"{}"\n'.format(media_id, comment.owner.identifier, comment.owner.username, comment.text.strip('\n')))
+                            f.write('{},{},{},"{}"\n'.format(media_id, comment.owner.identifier, comment.owner.username, comment_text))
                     break
                 except Exception as e:
                     print(e)        
