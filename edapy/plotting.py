@@ -62,7 +62,8 @@ def distplot_categorical(data, cols_cat, col_target=None, normalize=True, grid_c
     if col_target is None:
         for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
             data[col].value_counts(normalize=normalize).plot.bar(ax=a)
-            a.set_xticklabels(a.get_xticklabels(), rotation=30, ha='right')
+            xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
+            a.set_xticklabels(xlabels, rotation=30, ha='right')
             a.set_xlabel(col)
         plt.tight_layout()
     else:        
