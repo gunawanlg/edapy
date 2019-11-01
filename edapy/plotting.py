@@ -69,7 +69,8 @@ def distplot_categorical(data, cols_cat, col_target=None, normalize=True, grid_c
         if (data[col_target].nunique() == 2): # binary target
             for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
                 data.groupby(col_target)[col].value_counts(normalize=normalize).unstack(0).plot.bar(ax=a)
-                a.set_xticklabels(a.get_xticklabels(), rotation=30, ha='right')
+                xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
+                a.set_xticklabels(xlabels, rotation=30, ha='right')
             plt.tight_layout()
         else: # regression target, distribution of target by each attributes                
             for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
@@ -130,5 +131,6 @@ def diff_distplot_categorical(data, cols_cat, col_target, filt_idx, grid_c=3, w=
             (data2 - data1).plot.bar(ax=a)
             a.set_ylim([-1.0, 1.0])
             a.axhline(color='gray')
-            a.set_xticklabels(a.get_xticklabels(), rotation=30, ha='right')
+            xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
+            a.set_xticklabels(xlabels, rotation=30, ha='right')
         plt.tight_layout()
