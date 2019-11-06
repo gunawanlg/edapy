@@ -135,3 +135,32 @@ def diff_distplot_categorical(data, cols_cat, col_target, filt_idx, grid_c=3, w=
             xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
             a.set_xticklabels(xlabels, rotation=30, ha='right')
         plt.tight_layout()
+
+def waffle_chart(df_pivot, suptitle='', title='', figsize=(14, 2.8)): 
+    """
+    Create waffle chart like the one in github contribution.
+
+    Arguments:
+        df_pivot {pd.DataFrame} -- pivot dataframe with 3 columns (x, y, values)
+
+    Keyword Arguments:
+        suptitle {str} -- title string in the plot
+        titile {str} -- subtitle string in the plot
+        figsize {tuple} -- figsize arguments of plt.subplots()
+    """
+    Weekday, Week = np.mgrid[:df_pivot.shape[0]+1, :df_pivot.shape[1]+1]
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_aspect("equal")
+    ax.set_yticks([])
+    ax.set_yticklabels('')
+    ax.set_yticks(np.array(range(len(df_pivot.index))) + 0.5, minor=True)
+    ax.set_yticklabels(list(df_pivot.index), minor=True)
+    ax.set_xticks(list(range(df_pivot.shape[1])))
+    ax.set_xticklabels(list(df_pivot.columns))
+    ax.set_xlabel(df_pivot.columns.name)
+    
+    plt.pcolormesh(Week, Weekday, df_pivot.values, cmap="Blues", edgecolor="w", vmin=-10, vmax=100)
+    plt.xlim(0, df_pivot.shape[1])
+    plt.suptitle(suptitle,fontsize=20, ha='left', x=0.125)
+    plt.title(title,fontsize=14, loc='left')
+    plt.show()
