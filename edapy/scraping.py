@@ -32,25 +32,31 @@ def get_medias(metadata, filename, n=None):
     else:
         medias = instagram.get_medias(metadata['username'], count=metadata['media_count'])
 
-    lists = []
-    for media in tqdm(medias):
-        lists.append([
-            media.identifier,
-            media.short_code,
-            media.created_time,
-            media.caption,
-            media.comments_count if hasattr(media, 'commentsCount') else 0,
-            media.likes_count,
-            media.link,
-            media.image_high_resolution_url,
-            media.type
-        ])
-
     cols = ['identifier', 'short_code', 'created_time', 'caption', 'comments_count', 'likes_count', 'link', 'image_high_resolution_url', 'type']
-    with open(filename, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(cols)
-        writer.writerows(lists)
+    with open(filename, 'w', encoding="utf-8") as f:
+        header_str = ','.join(cols) + '\n'
+        f.write(header_str)
+        pbar_medias = tqdm(medias)
+        for media in pbar_medias:
+            pbar_medias.set_description("Getting medias")
+            caption = media.caption
+            caption = caption.strip('\n')
+            caption = caption.replace('\n.', '')
+            caption = caption.replace('\r', '')
+            caption = caption.replace('\n', '')
+            l = [
+                str(media.identifier),
+                str(media.short_code),
+                str(media.created_time),
+                '"'+str(caption)+'"',
+                str(media.comments_count) if hasattr(media, 'commentsCount') else str(0),
+                str(media.likes_count),
+                str(media.link),
+                str(media.image_high_resolution_url),
+                str(media.type)
+            ]
+            out_str = ','.join(l) + '\n'
+            f.write(out_str)
 
     return medias
 
@@ -74,8 +80,12 @@ def get_all_media_comments(medias, filename, proxies):
         batches.append(x)
         
     # Do the scraping.....
-    for b in tqdm(batches):
-        for media in b:
+    pbar_batches = tqdm(batches)
+    for b in pbar_batches:
+        pbar_batches.set_description('Media')
+        pbar_comment = tqdm(b)
+        for media in pbar_comment:
+            pbar_comment.set_description('Comment')
             # Try maximum 10 proxies, otherwise skip
             for _ in range(10):
                 try:
