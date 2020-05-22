@@ -3,6 +3,48 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 import seaborn as sns
+import statsmodels.api as sm
+
+
+def ecdf_numerical(data, cols_num, col_target=None, grid_c=3, w=15, h_factor=3.5):
+    """
+    Empirical Cumulative Distribution Function plot. Useful for KS-test.
+
+    Arguments:
+        data {pd.DataFrame} -- dataframe without infinite values
+        cols_num [str] -- numerical column in dataframe
+
+    Keyword Arguments:
+        col_target {str} -- if None, plot distribution without col_target grouping
+                             else plot cols_num attribute depending on type of col_target unique values,
+                             same as None if col_target unique values is not equal to 2
+        grid_c {int} -- default 3, number of column grid
+        w {int} -- default 15, figsize width arguments
+        h_factor {float} -- default 3.5, height of small plots
+    """
+    n = math.ceil(len(cols_num) / grid_c)
+    fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
+    if col_target is None:        
+        for col, a in zip(sorted(cols_num), ax.reshape(-1)):
+            ecdf = sm.distributions.ECDF(data[col])
+            ax.plot(ecdf.x, ecdf.y)
+            a.set_xlabel(col)
+    else:
+        if (data[col_target].nunique() == 2): # binary target
+            target_mask = data[col_target] == sorted(data[col_target].unique())[0]
+            for col, a in zip(sorted(cols_num), ax.reshape(-1)):
+                ecdf = sm.distributions.ECDF(data[target_mask][col].dropna())
+                ecdf2 = sm.distributions.ECDF(data[~target_mask][col].dropna())
+                a.plot(ecdf.x, ecdf.y)
+                a.plot(ecdf2.x, ecdf2.y)
+                a.legend(sorted(data[col_target].unique()))
+                a.set_xlabel(col)
+        else: # regression target, plot only distribution of attributes
+            for col, a in zip(sorted(cols_num), ax.reshape(-1)):
+                ecdf = sm.distributions.ECDF(data[col])
+                ax.plot(ecdf.x, ecdf.y)
+                a.set_xlabel(col)
+
 
 def distplot_numerical(data, cols_num, col_target=None, grid_c=3, w=15, h_factor=3.5):
     """
