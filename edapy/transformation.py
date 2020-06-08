@@ -7,11 +7,13 @@ def convert_to_categorical(df, cat_limit=20):
             df[col] = df[col].astype('category')
             print("Column {} casted to categorical".format(col))
 
+
 def reduce_ordinal_category(series, bins, values):
     temp = pd.cut(series, bins=bins).astype('str')
     keys = temp.unique()
     mapper = dict(zip(keys, values))
     return temp.map(mapper)
+
 
 def outlier_removal(X, method='Tukey', k=3):
     Q3 = X.quantile(0.75)
@@ -21,6 +23,7 @@ def outlier_removal(X, method='Tukey', k=3):
     lower = Q1 - 3*IQR
     res = (X < lower) | (X > upper)
     return res
+
 
 def reduce_mem_usage(df, verbose=True):
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']

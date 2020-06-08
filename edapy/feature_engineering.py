@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 def add_consecutive_days(df, col_ID, col_date, col_consecutive='consecutive'):
     """
     Add number of consecutive transaction column to dataframe of transaction.

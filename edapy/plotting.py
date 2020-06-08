@@ -10,39 +10,43 @@ def ecdf_numerical(data, cols_num, col_target=None, grid_c=3, w=15, h_factor=3.5
     """
     Empirical Cumulative Distribution Function plot. Useful for KS-test.
 
-    Arguments:
-        data {pd.DataFrame} -- dataframe without infinite values
-        cols_num [str] -- numerical column in dataframe
-
-    Keyword Arguments:
-        col_target {str} -- if None, plot distribution without col_target grouping
-                             else plot cols_num attribute depending on type of col_target unique values,
-                             same as None if col_target unique values is not equal to 2
-        grid_c {int} -- default 3, number of column grid
-        w {int} -- default 15, figsize width arguments
-        h_factor {float} -- default 3.5, height of small plots
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        dataframe without infinite values. will drop null values while plotting.
+    cols_num : list of str
+        interval or ratio column in data
+    col_target : str, optional
+        the target variable we want to distingusih the cols_num distributino
+    grid_c : int, default=3
+        number of grid columns
+    w : int, default=15
+        figsize witdh arguments
+    h_factor : float, default=3.5
+        height of small plot
     """
     n = math.ceil(len(cols_num) / grid_c)
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
+    sorted_cols_num = sorted(cols_num)  # we wnat it sorted for easier search
+    
     if col_target is None:        
-        for col, a in zip(sorted(cols_num), ax.reshape(-1)):
+        for col, a in zip(sorted_cols_num, ax.reshape(-1)):
             ecdf = sm.distributions.ECDF(data[col])
             ax.plot(ecdf.x, ecdf.y)
             a.set_xlabel(col)
     else:
-        if (data[col_target].nunique() == 2): # binary target
-            target_mask = data[col_target] == sorted(data[col_target].unique())[0]
-            for col, a in zip(sorted(cols_num), ax.reshape(-1)):
-                ecdf = sm.distributions.ECDF(data[target_mask][col].dropna())
-                ecdf2 = sm.distributions.ECDF(data[~target_mask][col].dropna())
-                a.plot(ecdf.x, ecdf.y)
-                a.plot(ecdf2.x, ecdf2.y)
-                a.legend(sorted(data[col_target].unique()))
+        sorted_cols_target = sorted(data[col_target].unique())
+        if len(sorted_cols_target) > 1 and len(sorted_cols_target) <= 5:  # > 5 will be too crowded
+            for col, a in zip(sorted_cols_num, ax.reshape(-1)):
+                for t in sorted_cols_target:
+                    ecdf = sm.distributions.ECDF(data[data[col_target] == t][col].dropna())
+                    a.plot(ecdf.x, ecdf.y)
+                a.legend(sorted_cols_target)
                 a.set_xlabel(col)
-        else: # regression target, plot only distribution of attributes
-            for col, a in zip(sorted(cols_num), ax.reshape(-1)):
-                ecdf = sm.distributions.ECDF(data[col])
-                ax.plot(ecdf.x, ecdf.y)
+        else:  # most probably regression analysis
+            for col, a in zip(sorted_cols_num, ax.reshape(-1)):
+                ecdf = sm.distributions.ECDF(data[col].dropna())
+                a.plot(ecdf.x, ecdf.y)
                 a.set_xlabel(col)
 
 
@@ -50,92 +54,116 @@ def distplot_numerical(data, cols_num, col_target=None, grid_c=3, w=15, h_factor
     """
     Distplot numerical column attributes in small multiple grid.
 
-    Arguments:
-        data {pd.DataFrame} -- dataframe without infinite values
-        cols_num [str] -- numerical column in dataframe
-
-    Keyword Arguments:
-        col_target {str} -- if None, plot distribution without col_target grouping
-                             else plot cols_num attribute depending on type of col_target unique values,
-                             same as None if col_target unique values is not equal to 2
-        grid_c {int} -- default 3, number of column grid
-        w {int} -- default 15, figsize width arguments
-        h_factor {float} -- default 3.5, height of small plots
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        dataframe without infinite values. will drop null values while plotting.
+    cols_num : list of str
+        interval or ratio column in data
+    col_target : str, optional
+        the target variable we want to distingusih the cols_num distributino
+    grid_c : int, default=3
+        number of grid columns
+    w : int, default=15
+        figsize witdh arguments
+    h_factor : float, default=3.5
+        height of small plot
     """
     n = math.ceil(len(cols_num) / grid_c)
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
+    sorted_cols_num = sorted(cols_num)  # we wnat it sorted for easier search
+    
     if col_target is None:        
-        for col, a in zip(sorted(cols_num), ax.reshape(-1)):
+        for col, a in zip(sorted_cols_num, ax.reshape(-1)):
             sns.distplot(data[col], ax=a)
             a.set_xlabel(col)
     else:
-        if (data[col_target].nunique() == 2): # binary target
-            target_mask = data[col_target] == sorted(data[col_target].unique())[0]
-            for col, a in zip(sorted(cols_num), ax.reshape(-1)):
-                sns.distplot(data[target_mask][col].dropna(), ax=a)                                    
-                sns.distplot(data[~target_mask][col].dropna(), ax=a)
-                a.legend(sorted(data[col_target].unique()))
+        sorted_cols_target = sorted(data[col_target].unique())
+        if len(sorted_cols_target) > 1 and len(sorted_cols_target) <= 5:  # > 5 will be too crowded
+            for col, a in zip(sorted_cols_num, ax.reshape(-1)):
+                for t in sorted_cols_target:
+                    sns.distplot(data[data[col_target] == t][col].dropna(), ax=a)
+                a.legend(sorted_cols_target)
                 a.set_xlabel(col)
-        else: # regression target, plot only distribution of attributes
-            for col, a in zip(sorted(cols_num), ax.reshape(-1)):
+        else:  # most probably regression analysis
+            for col, a in zip(sorted_cols_num, ax.reshape(-1)):
                 sns.distplot(data[col], ax=a)
                 a.set_xlabel(col)
 
-def distplot_categorical(data, cols_cat, col_target=None, normalize=True, grid_c=3, w=15, h_factor=3.5):
+
+def distplot_categorical(data, cols_cat, col_target=None, normalize=True, grid_c=3, w=15, 
+                         h_factor=3.5, sort=False, kind='bar'):
     """
     Distplot categorical column attributes in small multiple grid.
 
-    Arguments:
-        data {pd.DataFrame} -- dataframe without infinite values
-        cols_cat [str] -- categorical column in dataframe
-
-    Keyword Arguments:
-        col_target {str} -- if None, plot barchart using df.plot.bar without col_target grouping
-                             else plot cols_num attribute depending on type of col_target unique values,
-                             if binary col_target, plot barchart using df.plot.bar grouped by col_target,
-                             if numerical col_target, plot distplot using sns.displot grouped by col_target
-        normalize {Boolean} -- True to plot normalized values
-        grid_c {int} -- default 3, number of column grid
-        w {int} -- default 15, figsize width arguments
-        h_factor {float} -- default 3.5, height of small plots
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        dataframe without infinite values. will drop null values while plotting.
+    cols_cat : list of str
+        categorical column in data
+    col_target : str, optional
+        the target variable we want to distingusih the cols_num distributino
+    normalize : bool, default=True
+        wether to normalize the count or not
+    grid_c : int, default=3
+        number of grid columns
+    w : int, default=15
+        figsize witdh arguments
+    h_factor : float, default=3.5
+        height of small plot
+    sort : bool, default=False
+        prevent sorting based on counts, will fallback to .cat.categories if the series is having
+        category dtype
+    kind : str, default='bar'
+        matplotlib plot kind, really recommend to do bar plot, alternative would be 'barh'
     """
     n = math.ceil(len(cols_cat) / grid_c)
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
-    if col_target is None:
-        for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
-            data[col].value_counts(normalize=normalize).plot.bar(ax=a)
+    sorted_cols_cat = sorted(cols_cat)  # we want it sorted for easier search
+
+    if col_target is None:        
+        for col, a in zip(sorted_cols_cat, ax.reshape(-1)):
+            data[col].value_counts(normalize=normalize, sort=sort).plot(ax=a, kind=kind)
             xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
             a.set_xticklabels(xlabels, rotation=30, ha='right')
             a.set_xlabel(col)
-        plt.tight_layout()
-    else:        
-        if (data[col_target].nunique() == 2): # binary target
-            for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
-                data.groupby(col_target)[col].value_counts(normalize=normalize).unstack(0).plot.bar(ax=a)
+    else:
+        sorted_cols_target = sorted(data[col_target].unique())
+        if len(sorted_cols_target) > 1 and len(sorted_cols_target) <= 5:  # > 5 will be too crowded
+            for col, a in zip(sorted_cols_cat, ax.reshape(-1)):
+                data.groupby(col_target)[col].value_counts(normalize=normalize, sort=sort).unstack(0).plot(ax=a, kind=kind)
                 xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
                 a.set_xticklabels(xlabels, rotation=30, ha='right')
-            plt.tight_layout()
-        else: # regression target, distribution of target by each attributes                
-            for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
-                for val in data[col].unique():
-                    sns.distplot(data[data[col] == val][col_target], ax=a)
-                a.legend(data[col].unique())
+        else:  # most probably regression analysis
+            for col, a in zip(sorted_cols_cat, ax.reshape(-1)):
+                data[col].value_counts(normalize=normalize, sort=sort).plot(ax=a, kind=kind)
+                xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
+                a.set_xticklabels(xlabels, rotation=30, ha='right')
                 a.set_xlabel(col)
+    plt.tight_layout()
+
 
 def diff_distplot_numerical(data, cols_num, col_target, filt_idx, grid_c=3, w=15, h_factor=3.5):
     """
     Difference distplot numerical column attributes in small multiple grid.
 
-    Arguments:
-        data {pd.DataFrame} -- dataframe without infinite values
-        cols_num [str] -- numerical column in dataframe
-
-    Keyword Arguments:
-        col_target {str} -- if binary col_target, make 4 distplot combination of col_target and filt_idx unique values
-        filt_idx [Boolean] -- boolean list, used to filter data by using boolean indexing
-        grid_c {int} -- default 3, number of column grid
-        w {int} -- default 15, figsize width arguments
-        h_factor {float} -- default 3.5, height of small plots
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        dataframe without infinite values. will drop null values while plotting.
+    cols_num : list of str
+        interval or ratio column in data
+    col_target : str
+        the target variable we want to distingusih the cols_num distribution
+    filt_idx : list of bool
+        boolean indexing filter
+    grid_c : int, default=3
+        number of grid columns
+    w : int, default=15
+        figsize witdh arguments
+    h_factor : float, default=3.5
+        height of small plot
     """
     n = math.ceil(len(cols_num) / grid_c)
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
@@ -154,16 +182,22 @@ def diff_distplot_categorical(data, cols_cat, col_target, filt_idx, grid_c=3, w=
     """
     Difference distplot categorical column attributes in small multiple grid.
 
-    Arguments:
-        data {pd.DataFrame} -- dataframe without infinite values
-        cols_cat [str] -- numerical column in dataframe
-
-    Keyword Arguments:
-        col_target {str} -- if binary col_target, make diff barplot with negative and positive normalized value_counts
-        filt_idx [Boolean] -- boolean list, used to filter data by using boolean indexing
-        grid_c {int} -- default 3, number of column grid
-        w {int} -- default 15, figsize width arguments
-        h_factor {float} -- default 3.5, height of small plots
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        dataframe without infinite values. will drop null values while plotting.
+    cols_cat : list of str
+        categorical column in data
+    col_target : str, optional
+        the target variable we want to distingusih the cols_num distributino
+    filt_idx : list of bool
+        boolean indexing filter    
+    grid_c : int, default=3
+        number of grid columns
+    w : int, default=15
+        figsize witdh arguments
+    h_factor : float, default=3.5
+        height of small plot
     """
     n = math.ceil(len(cols_cat) / grid_c)
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
@@ -178,17 +212,21 @@ def diff_distplot_categorical(data, cols_cat, col_target, filt_idx, grid_c=3, w=
             a.set_xticklabels(xlabels, rotation=30, ha='right')
         plt.tight_layout()
 
+
 def waffle_chart(df_pivot, suptitle='', title='', figsize=(14, 2.8)): 
     """
     Create waffle chart like the one in github contribution.
 
-    Arguments:
-        df_pivot {pd.DataFrame} -- pivot dataframe with 3 columns (x, y, values)
-
-    Keyword Arguments:
-        suptitle {str} -- title string in the plot
-        titile {str} -- subtitle string in the plot
-        figsize {tuple} -- figsize arguments of plt.subplots()
+    Parameters
+    ----------
+    df_pivot : pandas.DataFrame
+        pivot dataframe with 3 columns (x, y, values)
+    suptitle : str, default=''
+        title string in the plot
+    title : str, default = ''
+        subtitle string in the plot
+    figsize : (float, float), default=(14, 2.8)
+        figisze arguments of plt.subplots()
     """
     Weekday, Week = np.mgrid[:df_pivot.shape[0]+1, :df_pivot.shape[1]+1]
     fig, ax = plt.subplots(figsize=figsize)
@@ -206,3 +244,65 @@ def waffle_chart(df_pivot, suptitle='', title='', figsize=(14, 2.8)):
     plt.suptitle(suptitle,fontsize=20, ha='left', x=0.125)
     plt.title(title,fontsize=14, loc='left')
     plt.show()
+
+
+def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, h_factor=3.5,
+                                sort=False, text_format="{:.2f}", alignment='right', filename='',
+                                color="#62AF8F"):
+    """
+    Plot binned numerical or categorical column vertically with text percentage shown.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        dataframe without infinite values, will drop null values while plotting
+    cols_cat : list of str
+        categorical column in data
+    normalize : bool, default=True
+        wether to normalize the counts or not, ideally is True
+    grid_c : int, default=3
+        number of grid columns
+    w : int, default=15
+        figsize witdh arguments
+    h_factor : float, default=3.5
+        height of small plot
+    sort : bool, default=False
+        prevent plot sorting from smallest count, wii fallback to .cat.categories if column
+        dtype is categorical
+    text_format : str, default={:.2f}
+        python string formatting
+    alignment : str, default='right'
+        if 'default', the text percentage will be near the bar plotted
+    filename : str, default=''
+        if '', will not save the plot
+    color : str, default="#62AF8F"
+        hex format string of bar color
+    """
+    n = math.ceil(len(cols_cat) / grid_c)
+    fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
+    for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
+        plot_data = data[col].value_counts(normalize=normalize, sort=sort)
+        bars = a.barh(plot_data.index, plot_data.values, align='center', height=0.8, alpha=0.7, color=color)
+        
+        max_x_value = a.get_xlim()[1]
+        distance = max_x_value * 0.01
+        
+        if alignment == 'default':
+            for bar in bars:
+                text = text_format.format(bar.get_width())
+                text_x = bar.get_width() + distance
+                text_y = bar.get_y() + bar.get_height() / 2
+                a.text(text_x, text_y, text, va='center')
+        elif alignment == 'right':
+            for bar in bars:
+                text = text_format.format(bar.get_width())
+                text_x = max_x_value
+                text_y = bar.get_y() + bar.get_height() / 2
+                a.text(text_x, text_y, text, va='center')
+        
+        a.spines['top'].set_visible(False)
+        a.spines['right'].set_visible(False)
+        a.set_title(col)
+    plt.tight_layout()
+    if filename is not '':
+        plt.savefig("figures/dist_cx_binning_new.png", dpi=100, transparent=False)
