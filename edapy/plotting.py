@@ -305,4 +305,4 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
         a.set_title(col)
     plt.tight_layout()
     if filename is not '':
-        plt.savefig("figures/dist_cx_binning_new.png", dpi=100, transparent=False)
+        plt.savefig(filename, dpi=100, transparent=False)

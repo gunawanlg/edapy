@@ -3,6 +3,7 @@ import pandas as pd
 from collections import Counter
 from .utils import get_unique_tuple
 
+
 def get_complete_edges(df, cols):
     """
     Arguments
