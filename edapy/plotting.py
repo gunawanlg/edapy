@@ -315,7 +315,7 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
         plt.savefig(filename, dpi=100, transparent=False)
 
 
-def stacked_bar(data, col_x, col_y, pct=True, barwidth=0.85):
+def stacked_bar(data, col_x, col_y, pct=True, barwidth=0.85, annotate=True):
     """
     Stacked bar chart.
     
@@ -331,6 +331,8 @@ def stacked_bar(data, col_x, col_y, pct=True, barwidth=0.85):
         wether to plot 100% stacked bar chart or not
     barwidth : float, default=0.85
         bar width plot
+    annotate : bool, default=True
+        wether to annotate or not, recommended only for pct=True
     """
     vc = data.groupby(col_x)[col_y].value_counts(normalize=pct).unstack()
     idx = vc.index
@@ -343,8 +345,15 @@ def stacked_bar(data, col_x, col_y, pct=True, barwidth=0.85):
         plt.bar(idx, bars, bottom=prev_bars, edgecolor='white', width=barwidth, label=lbl)
         if prev_bars is None:
             prev_bars = bars
+            if annotate:
+                for x, y in zip(idx, prev_bars):
+                    plt.text(x, y / 2, "{:.2f}".format(y), ha='center', va='center', fontsize=10)
         else:
+            temp_y = (bars / 2) + prev_bars
             prev_bars = prev_bars + bars
+            if annotate:
+                for x, y, v in zip(idx, temp_y, bars):
+                    plt.text(x, y, "{:.2f}".format(v), ha='center', va='center', fontsize=10)
     plt.legend(loc='upper left', bbox_to_anchor=(1,1), ncol=1)
     plt.xticks(rotation=45)
     plt.show()        
