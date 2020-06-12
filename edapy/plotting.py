@@ -248,7 +248,7 @@ def waffle_chart(df_pivot, suptitle='', title='', figsize=(14, 2.8)):
 
 def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, h_factor=3.5,
                                 sort=False, text_format="{:.2f}", alignment='right', filename='',
-                                color="#62AF8F"):
+                                color="#62AF8F", lbl_limit=12):
     """
     Plot binned numerical or categorical column vertically with text percentage shown.
 
@@ -277,9 +277,12 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
         if '', will not save the plot
     color : str, default="#62AF8F"
         hex format string of bar color
+    lbl_limit : int, default=12
+        label limit, will truncate longer label
     """
     n = math.ceil(len(cols_cat) / grid_c)
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
+    plt.draw()
     for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
         plot_data = data[col].value_counts(normalize=normalize, sort=sort)
         bars = a.barh(plot_data.index, plot_data.values, align='center', height=0.8, alpha=0.7, color=color)
@@ -287,6 +290,9 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
         max_x_value = a.get_xlim()[1]
         distance = max_x_value * 0.01
         
+        yticklabels = [x[:lbl_limit]+'...' if (len(x) > lbl_limit) else x for x in plot_data.index]
+        a.set_yticklabels(yticklabels)
+
         if alignment == 'default':
             for bar in bars:
                 text = text_format.format(bar.get_width())
@@ -303,6 +309,7 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
         a.spines['top'].set_visible(False)
         a.spines['right'].set_visible(False)
         a.set_title(col)
+        
     plt.tight_layout()
     if filename is not '':
         plt.savefig(filename, dpi=100, transparent=False)
