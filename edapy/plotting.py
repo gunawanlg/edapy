@@ -306,3 +306,38 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
     plt.tight_layout()
     if filename is not '':
         plt.savefig(filename, dpi=100, transparent=False)
+
+
+def stacked_bar(data, col_x, col_y, pct=True, barwidth=0.85):
+    """
+    Stacked bar chart.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame
+        data to plot
+    col_x : str
+        column to normalize to, usually a time column
+    col_y : str
+        column to plot values
+    pct : bool, default=True
+        wether to plot 100% stacked bar chart or not
+    barwidth : float, default=0.85
+        bar width plot
+    """
+    vc = data.groupby(col_x)[col_y].value_counts(normalize=pct).unstack()
+    idx = vc.index
+    val = vc.values
+    
+    labels = list(vc.columns)
+    prev_bars = None
+    for i, lbl in enumerate(labels):
+        bars = val[:, i]
+        plt.bar(idx, bars, bottom=prev_bars, edgecolor='white', width=barwidth, label=lbl)
+        if prev_bars is None:
+            prev_bars = bars
+        else:
+            prev_bars = prev_bars + bars
+    plt.legend(loc='upper left', bbox_to_anchor=(1,1), ncol=1)
+    plt.xticks(rotation=45)
+    plt.show()        

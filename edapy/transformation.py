@@ -51,4 +51,13 @@ def reduce_mem_usage(df, verbose=True):
                     df[col] = df[col].astype(np.float64)    
     end_mem = df.memory_usage().sum() / 1024**2
     if verbose: print('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(end_mem, 100 * (start_mem - end_mem) / start_mem))
-    return df    
+    return df
+
+
+def create_pivot(data, x, y):
+    g = data.groupby([y, x], as_index=False).size().reset_index(name='count')
+    df = g.pivot(columns=x, index=y, values="count")
+    df.fillna(0, inplace=True)
+    df = df.reindex(delays_mean.index)[:5]
+    df = df[::-1]
+    return df
