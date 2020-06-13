@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from collections import Counter
 from .utils import get_unique_tuple
+from tqdm.auto import tqdm
 
 
 def get_complete_edges(df, cols):
@@ -54,14 +55,19 @@ def get_tuple_edges(df, cols, directed=False, weight=False):
         d {dict} -- dictionary with key of cols, and value of list of tuples of edges (e.g [(1, 2), (2, 3), ...])
     """
     d = {}
-    weights = [] # list for efficiently calculates weight
-    for col in cols:
+    weights = []  # calculates weight by counting number of connections
+    for col in tqdm(cols):
         targets = []
+        
+        # Null value data
         XNA_mask = df[col].isnull()
         if (df[col].dtype in ['O', 'str']):
             XNA_mask = XNA_mask | (df[col] == 'XNA')
-        indexes = list(df[~XNA_mask].index)
-        for n in indexes:
+
+        # Mark all duplicates as True, keep=False
+        indexes = list(df[~XNA_mask & df[col].duplicated(keep=False)].index)  
+        
+        for n in tqdm(indexes):
             source = n
             same_val = (df[col] == df.loc[source, col])
             target = [(source, i) for i, x in same_val.items() if x]
@@ -69,7 +75,8 @@ def get_tuple_edges(df, cols, directed=False, weight=False):
                 target.remove((source, source))
             except:
                 pass
-            targets.extend(target)            
+            targets.extend(target)
+
         if (directed == False): # Create undirected graph: (1, 2) is the same as (2, 1)
             targets = get_unique_tuple(targets)
         if (weight == True):
@@ -80,4 +87,4 @@ def get_tuple_edges(df, cols, directed=False, weight=False):
     if (weight == True):
         c = Counter(x for x in weights)
         d['connection'] = [(x, y, val) for (x, y), val in c.items()]
-    return d    
+    return d
