@@ -75,4 +75,62 @@ def lookup_date(s):
     Example: df['date'] = lookup_date(df['date'])
     """
     dates = {date:pd.to_datetime(date) for date in s.unique()}
-    return s.map(dates)    
+    return s.map(dates)
+
+
+def sample_numpy(A, n, replace=False):
+    """
+    Sample numpy array.
+
+    Parameters
+    ----------
+    A : numpy.ndarray(shape=[m, *dims])
+        numpy array to be sampled from, with number of examples in first
+        dimension
+    n : int
+        number of samples
+    replace : bool
+        False to perform sampling without replacement
+
+    Returns
+    -------
+    sample : numpy.ndarray(shape=[n, *dims])
+        sampled numpy array from A
+    """
+    return A[np.random.choice(A.shape[0], n, replace=replace), :]
+
+
+def trunc_string(s, limit=100):
+    """Aku adalah dia --> Aku ada..."""
+    return s[:limit]+'...' if len(s) > limit else s
+
+
+def autolabel(ax, normalized=True, barh=False):
+    # Attach some text labels.
+    for rect in ax.patches:
+        if barh:
+            if normalized:
+                ax.text(rect.get_x() + rect.get_width() / 2.,
+                        rect.get_y() + rect.get_height() / 2.,
+                        '{}'.format(str(round(rect.get_width() * 100, 2)) +'%'),
+                        ha = 'center',
+                        va = 'center')
+            else:
+                ax.text(rect.get_x() + rect.get_width() / 2.,
+                        rect.get_y() + rect.get_height() / 2.,
+                        '{:.0f}'.format(rect.get_width()),
+                        ha = 'center',
+                        va = 'center')
+        else:
+            if normalized:
+                ax.text(rect.get_x() + rect.get_width() / 2.,
+                        rect.get_y() + rect.get_height() / 2.,
+                        '{}'.format(str(round(rect.get_height() * 100, 2)) +'%'),
+                        ha = 'center',
+                        va = 'center')
+            else:
+                ax.text(rect.get_x() + rect.get_width() / 2.,
+                        rect.get_y() + rect.get_height() / 2.,
+                        '{:.0f}'.format(rect.get_height()),
+                        ha = 'center',
+                        va = 'center')

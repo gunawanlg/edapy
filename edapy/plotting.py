@@ -4,6 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
+from .utils import autolabel
 
 
 def ecdf_numerical(data, cols_num, col_target=None, grid_c=3, w=15, h_factor=3.5):
@@ -130,7 +131,7 @@ def distplot_categorical(data, cols_cat, col_target=None, normalize=True, grid_c
             a.set_xlabel(col)
     else:
         sorted_cols_target = sorted(data[col_target].unique())
-        if len(sorted_cols_target) > 1 and len(sorted_cols_target) <= 5:  # > 5 will be too crowded
+        if len(sorted_cols_target) > 1 and len(sorted_cols_target) <= 6:  # > 5 will be too crowded
             for col, a in zip(sorted_cols_cat, ax.reshape(-1)):
                 data.groupby(col_target)[col].value_counts(normalize=normalize, sort=sort).unstack(0).plot(ax=a, kind=kind)
                 xlabels = [x.get_text()[:15]+'...' if (len(x.get_text()) > 15) else x for x in a.get_xticklabels()]
@@ -177,6 +178,7 @@ def diff_distplot_numerical(data, cols_num, col_target, filt_idx, grid_c=3, w=15
             sns.distplot(data[filt_idx & ~target_mask][col].dropna(), ax=a)
             a.legend(sorted_keys + ['filt_'+sorted_keys[0], 'filt_'+sorted_keys[1]])
             a.set_xlabel(col)
+
 
 def diff_distplot_categorical(data, cols_cat, col_target, filt_idx, grid_c=3, w=15, h_factor=3.5):
     """
@@ -284,7 +286,11 @@ def distplot_categorical_pretty(data, cols_cat, normalize=True, grid_c=5, w=15, 
     fig, ax = plt.subplots(n, grid_c, figsize=(w, h_factor*n))
     plt.draw()
     for col, a in zip(sorted(cols_cat), ax.reshape(-1)):
-        plot_data = data[col].value_counts(normalize=normalize, sort=sort)
+        # if data[col].dtype not in ['float64', 'int64', 'float32', 'int32']:
+        #     plot_data = data[col].value_counts(normalize=normalize, sort=sort, dropna=False)
+        # else:
+        #     plot_data = data[col].astype(str).value_counts(normalize=normalize, sort=sort, dropna=False)
+        plot_data = data[col].value_counts(normalize=normalize, sort=sort, dropna=False)
         bars = a.barh(plot_data.index, plot_data.values, align='center', height=0.8, alpha=0.7, color=color)
         
         max_x_value = a.get_xlim()[1]
@@ -356,4 +362,27 @@ def stacked_bar(data, col_x, col_y, pct=True, barwidth=0.85, annotate=True):
                     plt.text(x, y, "{:.2f}".format(v), ha='center', va='center', fontsize=10)
     plt.legend(loc='upper left', bbox_to_anchor=(1,1), ncol=1)
     plt.xticks(rotation=45)
-    plt.show()        
+    plt.show()
+
+
+def plot_share(data, col_x, col_y, legend=None, figsize=(16, 4), stacked=True, dropna=False, color=None, reindex=None):
+    fig, axes = plt.subplots(1, 2, figsize=figsize)
+    data.groupby(col_x)[col_y].value_counts(normalize=False, dropna=dropna).unstack().reindex(reindex).plot(kind='bar', alpha=0.7, stacked=stacked, ax=axes[0], color=color)
+    data.groupby(col_x)[col_y].value_counts(normalize=True, dropna=dropna).unstack().reindex(reindex).plot(kind='bar', alpha=0.7, stacked=stacked, ax=axes[1], color=color)
+
+    for ax, norm in zip(axes, [False, True]):
+
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                        box.width, box.height * 0.9])
+        if legend is not None:
+            ax.legend(legend, loc='upper center', bbox_to_anchor=(0.5, -0.3),
+                      fancybox=False, shadow=False, ncol=3)
+        else:
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.3),
+                      fancybox=False, shadow=False, ncol=3)
+        for label in ax.get_xticklabels():
+            label.set_rotation(45)
+        
+        autolabel(ax, normalized=norm)
+    plt.show()
