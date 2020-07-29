@@ -105,7 +105,7 @@ def trunc_string(s, limit=100):
     return s[:limit]+'...' if len(s) > limit else s
 
 
-def autolabel(ax, normalized=True, barh=False):
+def autolabel(ax, normalized=True, barh=False, **kwargs):
     # Attach some text labels.
     for rect in ax.patches:
         if barh:
@@ -114,23 +114,27 @@ def autolabel(ax, normalized=True, barh=False):
                         rect.get_y() + rect.get_height() / 2.,
                         '{}'.format(str(round(rect.get_width() * 100, 2)) +'%'),
                         ha = 'center',
-                        va = 'center')
+                        va = 'center',
+                        **kwargs)
             else:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
                         '{:.0f}'.format(rect.get_width()),
                         ha = 'center',
-                        va = 'center')
+                        va = 'center',
+                        **kwargs)
         else:
             if normalized:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
                         '{}'.format(str(round(rect.get_height() * 100, 2)) +'%'),
                         ha = 'center',
-                        va = 'center')
+                        va = 'center',
+                        **kwargs)
             else:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
                         '{:.0f}'.format(rect.get_height()),
                         ha = 'center',
-                        va = 'center')
+                        va = 'center',
+                        **kwargs)
