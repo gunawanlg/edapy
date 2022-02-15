@@ -10,9 +10,9 @@ def batch(l, b=1, n=None):
     ----------
     l : list
         list to create batches from
-    b : int, optional, [default = 1]
+    b : int, optional, [default=1]
         batch size
-    n : int, optional, [default = None]
+    n : int, optional, [default=None]
         if None: len(batches[-1]) < b if len(iterable) % b != 0
         else: len(batches[-1]) == b if len(iterable) % b == 0
         this will override b param
@@ -25,8 +25,8 @@ def batch(l, b=1, n=None):
     Example
     -------
     If n is None, or not inputted
-    >>> l = list(range(10))
-    >>> batches = batch(l, 3)
+    >>> l=list(range(10))
+    >>> batches=batch(l, 3)
     >>> batches
     <generator object batch at 0x005A0370>
     >>> for b in batches:
@@ -38,8 +38,8 @@ def batch(l, b=1, n=None):
     [9]
 
     if n is not None:
-    >>> l = list(range(10))
-    >>> batches = batch(l, n=3)
+    >>> l=list(range(10))
+    >>> batches=batch(l, n=3)
     >>> batches
     <generator object batch at 0x006C0F30>
     >>> for b in batches:
@@ -72,9 +72,9 @@ def lookup_date(s):
     For large data, the same dates are often repeated. Rather than
     re-parse these, we store all unique dates, parse them, and
     use a lookup to convert all dates.
-    Example: df['date'] = lookup_date(df['date'])
+    Example: df['date']=lookup_date(df['date'])
     """
-    dates = {date:pd.to_datetime(date) for date in s.unique()}
+    dates = {date: pd.to_datetime(date) for date in s.unique()}
     return s.map(dates)
 
 
@@ -112,29 +112,29 @@ def autolabel(ax, normalized=True, barh=False, **kwargs):
             if normalized:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
-                        '{}'.format(str(round(rect.get_width() * 100, 2)) +'%'),
-                        ha = 'center',
-                        va = 'center',
+                        '{}'.format(str(round(rect.get_width() * 100, 2)) + '%'),
+                        ha='center',
+                        va='center',
                         **kwargs)
             else:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
                         '{:.0f}'.format(rect.get_width()),
-                        ha = 'center',
-                        va = 'center',
+                        ha='center',
+                        va='center',
                         **kwargs)
         else:
             if normalized:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
-                        '{}'.format(str(round(rect.get_height() * 100, 2)) +'%'),
-                        ha = 'center',
-                        va = 'center',
+                        '{}'.format(str(round(rect.get_height() * 100, 2)) + '%'),
+                        ha='center',
+                        va='center',
                         **kwargs)
             else:
                 ax.text(rect.get_x() + rect.get_width() / 2.,
                         rect.get_y() + rect.get_height() / 2.,
                         '{:.0f}'.format(rect.get_height()),
-                        ha = 'center',
-                        va = 'center',
+                        ha='center',
+                        va='center',
                         **kwargs)

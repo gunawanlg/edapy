@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 
 def add_consecutive_days(df, col_ID, col_date, col_consecutive='consecutive'):
@@ -10,13 +9,13 @@ def add_consecutive_days(df, col_ID, col_date, col_consecutive='consecutive'):
         df {pd.DataFrame} -- typically transaction dataframe
         col_ID {String} -- column of unique user ID
         col_date {String} -- column of timestamp or datetime identifying when the transaction occurs
-    
+
     Keyword Arguments:
         col_consecutive {String} -- name of result column
     """
 
     # Convert date column to pd.DateTime format
-    df[col_date]  = pd.to_datetime(df[col_date])
+    df[col_date] = pd.to_datetime(df[col_date])
 
     # Create date diff in days column
     df['date_diff'] = (max(df[col_date]) - df[col_date])
@@ -27,7 +26,7 @@ def add_consecutive_days(df, col_ID, col_date, col_consecutive='consecutive'):
 
     for ID in df[col_ID].unique():
         df_temp = df[df[col_ID] == ID]
-        
+
         # Sort descending transactional data by date column, get unique date_diff column
         temp = sorted(df_temp['date_diff'].unique())[::-1]
 
@@ -35,12 +34,12 @@ def add_consecutive_days(df, col_ID, col_date, col_consecutive='consecutive'):
         res = [0]
         curr = 0
         for i in range(len(temp) - 1):
-            if ((temp[i+1] - temp[i]) == -1):        
+            if ((temp[i+1] - temp[i]) == -1):
                 curr = curr + 1
             else:
                 curr = 0
             res.append(curr)
-        
+
         # Create dictionary for mapping it back to the data
         res2 = [[x1, x2] for x1, x2 in zip(temp, res)]
         res2 = dict(res2)

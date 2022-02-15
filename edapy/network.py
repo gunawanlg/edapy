@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 from collections import Counter
 from .utils import get_unique_tuple
 from tqdm.auto import tqdm
@@ -13,8 +11,8 @@ def get_complete_edges(df, cols):
         cols {list} -- list of attributes to be checked to
     Return
     ------
-        d = 
-        { 
+        d =
+        {
             'key': [[], [], [], [], ...], # len = number of total data
             'key1': [[], [], [], [], ...],
             ...
@@ -32,13 +30,15 @@ def get_complete_edges(df, cols):
             target = [i for i, x in enumerate(same_val) if x]
             try:
                 target.remove(source)
-            except:
+            except Exception as e:
+                print(e)
                 pass
             targets.append(target)
         d[col] = targets
     return d
 
-### NEED OPTIMIZATION O(n^2) ###
+# NEED OPTIMIZATION O(n^2)
+
 
 def get_tuple_edges(df, cols, directed=False, weight=False):
     """
@@ -58,33 +58,34 @@ def get_tuple_edges(df, cols, directed=False, weight=False):
     weights = []  # calculates weight by counting number of connections
     for col in tqdm(cols):
         targets = []
-        
+
         # Null value data
         XNA_mask = df[col].isnull()
         if (df[col].dtype in ['O', 'str']):
             XNA_mask = XNA_mask | (df[col] == 'XNA')
 
         # Mark all duplicates as True, keep=False
-        indexes = list(df[~XNA_mask & df[col].duplicated(keep=False)].index)  
-        
+        indexes = list(df[~XNA_mask & df[col].duplicated(keep=False)].index)
+
         for n in tqdm(indexes):
             source = n
             same_val = (df[col] == df.loc[source, col])
             target = [(source, i) for i, x in same_val.items() if x]
             try:
                 target.remove((source, source))
-            except:
+            except Exception as e:
+                print(e)
                 pass
             targets.extend(target)
 
-        if (directed == False): # Create undirected graph: (1, 2) is the same as (2, 1)
+        if directed is False:  # Create undirected graph: (1, 2) is the same as (2, 1)
             targets = get_unique_tuple(targets)
-        if (weight == True):
+        if weight is True:
             weights.extend(targets)
         else:
             d[col] = targets
-        
-    if (weight == True):
+
+    if weight is True:
         c = Counter(x for x in weights)
         d['connection'] = [(x, y, val) for (x, y), val in c.items()]
     return d

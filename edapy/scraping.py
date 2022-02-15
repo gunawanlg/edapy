@@ -1,12 +1,10 @@
-import csv
-
-# Instagram Scraping Packages
 from igramscraper.instagram import Instagram
 
 # Utilities, free proxies website https://openproxy.space/list/
 from itertools import cycle
 from .utils import batch
 from tqdm import tqdm_notebook as tqdm
+
 
 def get_account_metadata(username):
     instagram = Instagram()
@@ -22,8 +20,9 @@ def get_account_metadata(username):
     metadata['count_follows'] = account.follows_count
     metadata['is_private'] = account.is_private
     metadata['is_verified'] = account.is_verified
-    
+
     return metadata
+
 
 def get_medias(metadata, filename, n=None):
     instagram = Instagram()
@@ -32,7 +31,8 @@ def get_medias(metadata, filename, n=None):
     else:
         medias = instagram.get_medias(metadata['username'], count=metadata['media_count'])
 
-    cols = ['identifier', 'short_code', 'created_time', 'caption', 'comments_count', 'likes_count', 'link', 'image_high_resolution_url', 'type']
+    cols = ['identifier', 'short_code', 'created_time', 'caption', 'comments_count',
+            'likes_count', 'link', 'image_high_resolution_url', 'type']
     with open(filename, 'w', encoding="utf-8") as f:
         header_str = ','.join(cols) + '\n'
         f.write(header_str)
@@ -44,7 +44,7 @@ def get_medias(metadata, filename, n=None):
             caption = caption.replace('\n.', '')
             caption = caption.replace('\r', '')
             caption = caption.replace('\n', '')
-            l = [
+            data = [
                 str(media.identifier),
                 str(media.short_code),
                 str(media.created_time),
@@ -55,30 +55,31 @@ def get_medias(metadata, filename, n=None):
                 str(media.image_high_resolution_url),
                 str(media.type)
             ]
-            out_str = ','.join(l) + '\n'
+            out_str = ','.join(data) + '\n'
             f.write(out_str)
 
     return medias
+
 
 def get_all_media_comments(medias, filename, proxies):
     # Initialize files
     with open(filename, 'w', encoding="utf-8") as f:
         f.write("media_id,owner_id,owner_username,owner_comment\n")
-    
+
     # Rotating Proxies
-    proxy_cycle = cycle(proxies)    
+    proxy_cycle = cycle(proxies)
     proxy_str = next(proxy_cycle)
     proxy = {}
     proxy['http'] = 'http://'+proxy_str
     proxy['https'] = 'https://'+proxy_str
     instagram = Instagram()
     instagram.set_proxies(proxy)
-    
+
     # Create Batches
     batches = []
     for x in batch(medias, 10):
         batches.append(x)
-        
+
     # Do the scraping.....
     pbar_batches = tqdm(batches)
     for b in pbar_batches:
@@ -95,14 +96,18 @@ def get_all_media_comments(medias, filename, proxies):
                         comment_text = comment_text.replace('\r', '')
                         comment_text = comment_text.replace('\n', ' ')
                         with open(filename, 'a', encoding="utf-8") as f:
-                            f.write('{},{},{},"{}"\n'.format(media.identifier, comment.owner.identifier, comment.owner.username, comment_text))
+                            f.write('{},{},{},"{}"\n'.format(
+                                media.identifier,
+                                comment.owner.identifier,
+                                comment.owner.username,
+                                comment_text)
+                            )
                     break
                 except Exception as e:
-                    print(e)        
+                    print(e)
                     proxy_str = next(proxy_cycle)
                     proxy = {}
                     proxy['http'] = 'http://'+proxy_str
                     proxy['https'] = 'https://'+proxy_str
                     instagram = Instagram()
                     instagram.set_proxies(proxy)
-
